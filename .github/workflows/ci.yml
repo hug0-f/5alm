@@ -51,7 +51,7 @@ jobs:
     name: Deploy to VPS
     needs: ci
     runs-on: self-hosted
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
 
     steps:
       - name: Deploy
