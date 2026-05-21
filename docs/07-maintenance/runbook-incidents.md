@@ -7,8 +7,8 @@
 ## 0. Premiers réflexes
 
 1. Vérifier l'URL publique : https://lebontroc.xernex.fr
-2. Ouvrir le dashboard Grafana `vps1.xernex.fr` : repérer toute alerte `firing` (cf. règles documentées dans [plan-maintenance.md](plan-maintenance.md))
-3. Se connecter au VPS : `ssh debian@vps1.xernex.fr`
+2. Ouvrir le dashboard Grafana (privé) `grafana.new-teleport.xernex.fr` : repérer toute alerte `firing` (cf. règles documentées dans [plan-maintenance.md](plan-maintenance.md))
+3. Se connecter au VPS : `ssh debian@vps1.xernex.fr` depuis une IP sécurisée
 4. État des conteneurs : `docker compose ps`
 5. Logs en direct : `docker compose logs -f --tail=200`
 6. Health wa-service : `docker compose exec wa-service wget -qO- http://localhost:3001/api/health`
