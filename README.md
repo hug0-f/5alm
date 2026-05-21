@@ -22,7 +22,7 @@ Projet ALM M2 HESIAS. Hugo, Yanis, Thomas, Mohamed.
 - TailwindCSS 4 + lucide-react
 - PostgreSQL 18 (conteneur sur le VPS) + Prisma 7 (adapter `@prisma/adapter-pg`)
 - NextAuth 5 (Credentials) + bcryptjs
-- Baileys 6 (WhatsApp Web) pour l'envoi des codes de verification
+- Baileys 7 (WhatsApp Web) pour l'envoi des codes de verification
 - Docker + docker-compose pour le run local et le deploiement
 
 ## Prerequis
