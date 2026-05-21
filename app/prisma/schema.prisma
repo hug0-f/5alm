@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  phoneNumber           String    @unique
+  passwordHash          String
+  balance               Float     @default(0)
+  isVerified            Boolean   @default(false)
+  createdAt             DateTime  @default(now())
+  verificationCode      String?
+  verificationExpiry    DateTime?
+  verificationAttempts  Int       @default(0)
+
+  listings                  Listing[]
+  transactionsAsBeneficiary Transaction[] @relation("Beneficiary")
+  transactionsAsProvider    Transaction[] @relation("Provider")
+  sentMessages              Message[]     @relation("Sender")
+  receivedMessages          Message[]     @relation("Receiver")
+
+  @@map("users")
+}
+
+model Listing {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  duration    Float
+  category    String
+  postalCode  String
+  status      String   @default("ACTIVE")
+  createdAt   DateTime @default(now())
+
+  author       User          @relation(fields: [authorId], references: [id])
+  authorId     String
+  transactions Transaction[]
+
+  @@map("listings")
+}
+
+model Transaction {
+  id                   String   @id @default(cuid())
+  duration             Float
+  status               String   @default("OUVERTE")
+  beneficiaryValidated Boolean  @default(false)
+  providerValidated    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  listing       Listing  @relation(fields: [listingId], references: [id])
+  listingId     String
+  beneficiary   User     @relation("Beneficiary", fields: [beneficiaryId], references: [id])
+  beneficiaryId String
+  provider      User     @relation("Provider", fields: [providerId], references: [id])
+  providerId    String
+  ratings       Rating[]
+
+  @@map("transactions")
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  sender     User   @relation("Sender", fields: [senderId], references: [id])
+  senderId   String
+  receiver   User   @relation("Receiver", fields: [receiverId], references: [id])
+  receiverId String
+
+  @@map("messages")
+}
+
+model Rating {
+  id            String   @id @default(cuid())
+  score         Int
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  transactionId String
+
+  @@map("ratings")
+}

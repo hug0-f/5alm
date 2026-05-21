@@ -1,0 +1,24 @@
+ID,Intitulé,Composant conception,Cas de test,Sprint,Statut
+US-001,Inscription utilisateur,User · UC1 · Scénario 1 séquence,CT-AUTH-01 CT-AUTH-02,Sprint 1,Livré
+US-002,Vérification numéro par WhatsApp,User.verificationCode · Scénario 1 séquence,CT-AUTH-05 CT-AUTH-06,Sprint 1,Livré
+US-003,Connexion,User · UC2,CT-AUTH-03 CT-AUTH-04,Sprint 1,Livré
+US-004,Dashboard solde,User.balance,,Sprint 1,Livré
+US-005,Crédit de départ 1h,User.balance · Scénario 1 séquence,CT-AUTH-05,Sprint 1,Livré
+US-006,Profil utilisateur,User · UC3,,Sprint 1,Livré
+US-007,Publier une annonce,Listing · UC4,CT-LIST-01,Sprint 2,Livré
+US-008,Consulter les annonces,Listing · UC5,,Sprint 2,Livré
+US-009,Filtre catégorie,Listing.category · UC6,,Sprint 2,Livré
+US-010,Filtre code postal,Listing.postalCode · UC6,CT-LIST-02,Sprint 2,Livré
+US-011,Modifier/supprimer annonce,Listing,CT-LIST-03,Sprint 2,Livré
+US-012,Accepter/refuser une demande,Transaction · UC8 · POST refuse,Test manuel,Sprint 3,Livré
+US-013,Valider (côté bénéficiaire),Transaction · Scénario 2 séquence,CT-TX-01 CT-TX-02,Sprint 3,Livré
+US-014,Valider (côté prestataire),Transaction · Scénario 2 séquence,CT-TX-01 CT-TX-03,Sprint 3,Livré
+US-015,Historique transactions,Transaction · GET transactions,Test manuel,Sprint 3,Livré
+US-016,Interdiction auto-échange,Transaction règle métier,CT-TX-04,Sprint 3,Livré
+US-017,Envoyer un message,Message,,Sprint 2,Reporté
+US-018,Consulter conversations,Message,,Sprint 2,Reporté
+US-019,Répondre à un message,Message,,Sprint 2,Reporté
+US-020,Annuler une transaction,Transaction,,Sprint 3,Reporté
+US-021,Noter le prestataire,Rating,,Sprint 3,Reporté
+US-022,Noter le bénéficiaire,Rating,,Sprint 3,Reporté
+US-023,Note moyenne sur profil,Rating · User,,Sprint 3,Reporté
