@@ -3,7 +3,7 @@ import makeWASocket, {
   fetchLatestBaileysVersion,
   DisconnectReason,
   makeCacheableSignalKeyStore,
-} from '@whiskeysockets/baileys';
+} from 'baileys';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
 
@@ -18,12 +18,11 @@ export async function sendMessage(phoneE164, text) {
   if (!ready) throw new Error('WhatsApp non connecte');
 
   const number = phoneE164.replace(/^\+/, '');
-  const jid = `${number}@s.whatsapp.net`;
 
   const [result] = await sock.onWhatsApp(number);
   if (!result?.exists) throw new Error('Ce numero n est pas sur WhatsApp');
 
-  await sock.sendMessage(jid, { text });
+  await sock.sendMessage(result.jid, { text });
 }
 
 export async function connect() {
@@ -39,7 +38,6 @@ export async function connect() {
       keys: makeCacheableSignalKeyStore(state.keys, logger),
     },
     logger: pino({ level: 'warn' }),
-    printQRInTerminal: false,
     browser: ['Lebontroc', 'Chrome', '1.0'],
   });
 
