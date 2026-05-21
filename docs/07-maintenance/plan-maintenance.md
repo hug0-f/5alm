@@ -4,11 +4,11 @@
 
 | ID | Description | Criticité | Comment le détecter | Comment le résoudre | Délai cible |
 |----|-------------|-----------|---------------------|---------------------|-------------|
-| INC-01 | L'application est inaccessible | Haute | Alerte UptimeRobot | Rollback via git revert, pipeline CD redéploie automatiquement | 5 min |
+| INC-01 | L'application est inaccessible | Haute | Alerte UptimeRobot + alerte Grafana `Node DOWN` | Rollback via git revert, pipeline CD redéploie automatiquement | 5 min |
 | INC-02 | Un échange débite les heures deux fois | Haute | Remontée d'un utilisateur | Correction manuelle du solde + correctif + nouveau déploiement | 1 h |
 | INC-03 | Impossible de se connecter | Haute | Remontée d'un utilisateur | Rollback vers la version précédente | 15 min |
 | INC-04 | Les annonces ne s'affichent plus | Moyenne | Remontée d'un utilisateur | Correctif sur une branche → merge → redéploiement manuel (git push origin main, pipeline CD redéploie via docker compose) | 2 h |
-| INC-05 | Perte de données suite à une migration ratée | Critique | Erreurs dans les logs Docker (docker compose logs) | Restauration du dernier dump PostgreSQL (pg_dump planifié, voir section Sauvegardes) | 4 h |
+| INC-05 | Perte de données suite à une migration ratée | Critique | Alertes Grafana (`Disque presque plein`, `RAM élevée`, `I/O wait élevé`) + erreurs dans les logs Docker | Restauration du dernier dump PostgreSQL (pg_dump planifié, voir section Sauvegardes) | 4 h |
 
 ## Compromis techniques acceptés
 
@@ -35,12 +35,35 @@ cat /home/debian/backups/lebontroc-AAAA-MM-JJ.sql \
   | docker exec -i lebontroc-db psql -U lebontroc lebontroc
 ```
 
+## Monitoring et alertes
+
+Le VPS est supervisé par une stack **Prometheus + Grafana + node_exporter** colocalisée sur `vps1.xernex.fr`. Ce monitoring vient combler deux faiblesses de la version initiale du plan : (1) la détection des incidents reposait essentiellement sur les remontées utilisateurs et la lecture manuelle de `docker compose logs`, (2) on n'avait aucune visibilité système (CPU/RAM/disque/réseau) pour anticiper une panne.
+
+### Dashboard temps réel
+
+![Dashboard Grafana vps1.xernex.fr](images/vps1-grafana.png)
+
+Le dashboard agrège les métriques système exposées par `node_exporter` : uptime, charge CPU, utilisation mémoire, occupation disque, I/O, trafic réseau, latence réseau et température. Les valeurs sont scrappées par Prometheus et historisées, ce qui permet à la fois la lecture instantanée (état actuel du VPS) et l'analyse de tendance (saturation progressive, fuite mémoire, pic de trafic).
+
+### Règles d'alerte provisionnées
+
+![Règles d'alerte Grafana provisionnées via Prometheus](images/alerts-rule-grafana.png)
+
+Onze règles d'alerte sont déclarées en *provisioning* (versionnées avec la configuration Grafana, donc reproductibles sur un autre environnement). Elles couvrent :
+
+- **Santé du nœud** : `Node DOWN` (le VPS ne répond plus au scrape), `Reboot inattendu` (redémarrage détecté hors fenêtre de maintenance)
+- **Ressources** : `CPU élevé`, `RAM élevée`, `Charge système élevée`, `I/O wait élevé`, `Température CPU élevée`
+- **Stockage** : `Disque presque plein` (volume principal), `Disque boot plein` (partition `/boot/firmware`, souvent oubliée et qui peut bloquer un upgrade kernel)
+- **Réseau** : `Erreurs réseau` (paquets en erreur sur les interfaces)
+
+Chaque règle est rattachée à la source `Prometheus` et taguée avec un label permettant le routing. Le canal de notification configuré est **l'email** : toute alerte qui passe à l'état `firing` envoie un mail à l'équipe d'astreinte.
+
 ## Niveaux de service
 
 | Indicateur | Objectif | Comment on le mesure | Que fait-on si c'est dépassé |
 |-----------|---------|---------------------|------------------------------|
-| Disponibilité | 99 % par semaine | UptimeRobot (vérification toutes les 5 min) | Alerte email + investigation |
-| Temps de réponse | Moins de 500 ms en moyenne | Logs Docker (docker compose logs app) | On cherche la requête qui ralentit |
+| Disponibilité | 99 % par semaine | UptimeRobot (sonde externe toutes les 5 min) + alerte Grafana `Node DOWN` (sonde interne) | Alerte email + investigation |
+| Temps de réponse | Moins de 500 ms en moyenne | Métriques exposées dans Grafana/Prometheus (latence requête, charge serveur) | On cherche la requête qui ralentit |
 | Taux d'erreurs serveur | Moins de 1 % | UptimeRobot + logs Docker | Alerte + rollback si ça dépasse 5 % |
 
 ## Mises à jour des dépendances
@@ -67,5 +90,9 @@ Sur cette PR, Dependabot a généré automatiquement :
 - La signature commit (badge "Verified") pour prouver que la PR vient bien du bot et pas d'un attaquant
 
 L'équipe relit la PR, vérifie que les checks CI passent, et merge si tout va bien.
+
+## Limites actuelles et pistes d'évolution
+
+Le monitoring couvre aujourd'hui la **couche système** (VPS, OS, ressources). Il ne couvre pas encore la **couche applicative** : on ne mesure pas la latence par endpoint Next.js, le taux d'erreur 5xx applicatif, ni l'état des jobs internes (par exemple le service WhatsApp Baileys). En v3, ajouter un APM (par ex. exporter Prometheus depuis l'app Next + middleware de mesure côté Hono/Express) permettrait de fermer cette boucle.
 
 *Lebontroc, Projet ALM M2 HESIAS, 2025-2026*
